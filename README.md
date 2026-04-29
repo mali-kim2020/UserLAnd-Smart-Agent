@@ -1,4 +1,4 @@
-# 🛡️ OMEGA SOVEREIGN v150 - Autonomous Pentest Agent
+# 🛡️ OMEGA SOVEREIGN PROJECT v150 - Autonomous Pentest Agent
 **Maximale Stealth. Totale Souveränität. KI-gesteuerte Infiltration.**
 Omega Sovereign ist ein autonomer Sicherheits-Agent, der speziell für die Ausführung in mobilen Linux-Umgebungen (UserLAnd/Termux) entwickelt wurde. Er kombiniert die taktische Präzision von Metasploit mit der strategischen Intelligenz moderner KI-Modelle (Gemini 2.5 / GPT-4o).
 ## 🚀 Kern-Features
