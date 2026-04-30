@@ -28,7 +28,7 @@ echo "DEIN_OPENAI_ODER_GEMINI_KEY" > .api_key
 ```
 ## 🕹️ Einsatz & Profile
 Das Programm bleibt bei Metasploit nicht hängen. In der userland Umgebung dauert der Start der console ca 30 - 60 Sekunden!
-Starte das System einfach über den Ghost-Launcher. Dieser bootet automatisch das Tor-Netzwerk im Hintergrund und routet den gesamten Traffic durch den verschlüsselten Tunnel:
+Starte das System einfach über den Ghost-Launcher. Dieser bootet automatisch das Tor-Netzwerk im Hintergrund, überwacht den Verbindungsaufbau und routet den gesamten Traffic durch den verschlüsselten Tunnel:
 ```bash
 ./pentest
 
@@ -42,7 +42,7 @@ Starte das System einfach über den Ghost-Launcher. Dieser bootet automatisch da
 ## 📂 Dateistruktur (Sovereign Core)
  * autonomous_agent.py — Die zentrale KI-, Netzwerk- und Evasion-Logik.
  * setup_sovereign.sh — Der Heavy-Duty Installer (installiert Tor, MSF, EDB).
- * pentest — Der Launcher (startet den Tor-Daemon und Proxychains).
+ * pentest — Der Launcher (überwacht und startet den Tor-Daemon).
  * pentest_history.db — Das neuronale Gedächtnis (SQLite - speichert nun auch CVEs).
  * reports/ — Automatisch generierte Markdown-Berichte inkl. KI-Briefings und CVE-Mappings.
  * .api_key — Dein unsichtbarer Schlüssel.
