@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ======================================================================
-# OMEGA SOVEREIGN v1.50 - FULL INFRASTRUCTURE INSTALLER
+# PROJECT OMEGA SOVEREIGN v1.50 - FULL INFRASTRUCTURE INSTALLER 
 # ======================================================================
 
 BLUE='\033[94m'
@@ -9,13 +9,16 @@ GREEN='\033[92m'
 RED='\033[91m'
 RESET='\033[0m'
 
-echo -e "${BLUE}[*] Starte OMEGA SOVEREIGN Full-Installation...${RESET}"
+echo -e "${BLUE}[*] Starte PROJECT OMEGA SOVEREIGN Full-Installation mit Ghost-Routing...${RESET}"
 
-# 1. System-Basis & Nikto & Fix für Requests
-echo -e "${BLUE}[1/6] Installiere System-Tools, Python-Module & Nikto...${RESET}"
+# 1. System-Basis, Nikto, Python & TOR GHOST-NETZWERK
+echo -e "${BLUE}[1/6] Installiere System-Tools, Nikto, Tor & Proxychains...${RESET}"
 sudo apt update -y
 sudo apt install -y python3 python3-pip python3-requests python3-urllib3 \
-                     git unzip curl wget sqlite3 nikto build-essential
+                     git unzip curl wget sqlite3 nikto build-essential tor proxychains4
+
+# Konfiguriere Proxychains für das Tor-Netzwerk (SOCKS5 auf Port 9050 erzwingen)
+sudo sed -i 's/socks4 \+127.0.0.1 \+9050/socks5 127.0.0.1 9050/g' /etc/proxychains4.conf
 
 # 2. Metasploit-Framework (UserLAnd Spezial-Weg via Rapid7)
 echo -e "${BLUE}[2/6] Installiere Metasploit-Framework (Rapid7)...${RESET}"
@@ -49,25 +52,38 @@ ZIP_FILE=$(ls autonomous_agent_v150.zip 2>/dev/null | head -n 1)
 
 if [ -f "$ZIP_FILE" ]; then
     unzip -o "$ZIP_FILE"
-    # Entfernt unsichtbare "Geisterzeichen" die Fehler auslösen
     sed -i 's/\xe2\x80\x8b//g' autonomous_agent.py 2>/dev/null
     echo -e "${GREEN}[+] Agent-Code wurde gereinigt.${RESET}"
 else
     echo -e "${RED}[!] autonomous_agent_v150.zip fehlt!${RESET}"
 fi
 
-# 6. Launcher & Berechtigungen
-echo -e "${BLUE}[6/6] Finalisiere Launcher...${RESET}"
-echo -e '#!/bin/bash\npython3 autonomous_agent.py' > pentest
+# 6. Der neue GHOST-Launcher (Routet alles durch Tor)
+echo -e "${BLUE}[6/6] Finalisiere GHOST-Launcher...${RESET}"
+cat << 'EOF' > pentest
+#!/bin/bash
+echo -e "\033[94m[*] Initialisiere Ghost-Routing (Tor-Netzwerk)...\033[0m"
+
+if ! pgrep -x "tor" > /dev/null; then
+    tor > /dev/null 2>&1 &
+    echo -e "\033[90m[*] Verbinde mit Tor-Knoten (bitte ca. 5 Sekunden warten)...\033[0m"
+    sleep 5
+fi
+
+echo -e "\033[92m[+] Tor-Tunnel etabliert! Dein echter Standort ist nun verborgen.\033[0m"
+export TOR_ROUTING=1
+proxychains4 -q python3 autonomous_agent.py
+EOF
+
 chmod +x pentest
 chmod +x *.py 2>/dev/null
 
 echo -e "${GREEN}"
 echo "===================================================="
-echo "   FULL INSTALLATION ABGESCHLOSSEN (OMEGA STATUS)    "
+echo "   FULL INSTALLATION ABGESCHLOSSEN (GHOST STATUS)   "
 echo "===================================================="
-echo " Installiert: Metasploit, Nikto, Searchsploit       "
-echo " Fixes: Requests-Modul, Python-Syntax-Zero-Width    "
+echo " Ghost-Layer: Proxychains + Tor aktiviert           "
+echo " Deine echte IP-Adresse wird bei jedem Scan maskiert."
 echo "----------------------------------------------------"
 echo " Starte das System mit: ./pentest                   "
 echo "===================================================="
