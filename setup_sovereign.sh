@@ -12,13 +12,15 @@ RESET='\033[0m'
 echo -e "${BLUE}[*] Starte PROJECT OMEGA SOVEREIGN Full-Installation mit Ghost-Routing...${RESET}"
 
 # 1. System-Basis, Nikto, Python & TOR GHOST-NETZWERK
+# FIX: 'procps' hinzugefügt (für pgrep) und 'proxychains' als Fallback
 echo -e "${BLUE}[1/6] Installiere System-Tools, Nikto, Tor & Proxychains...${RESET}"
 sudo apt update -y
 sudo apt install -y python3 python3-pip python3-requests python3-urllib3 \
-                     git unzip curl wget sqlite3 nikto build-essential tor proxychains4
+                     git unzip curl wget sqlite3 nikto build-essential tor proxychains4 proxychains procps
 
 # Konfiguriere Proxychains für das Tor-Netzwerk (SOCKS5 auf Port 9050 erzwingen)
-sudo sed -i 's/socks4 \+127.0.0.1 \+9050/socks5 127.0.0.1 9050/g' /etc/proxychains4.conf
+sudo sed -i 's/socks4 \+127.0.0.1 \+9050/socks5 127.0.0.1 9050/g' /etc/proxychains4.conf 2>/dev/null
+sudo sed -i 's/socks4 \+127.0.0.1 \+9050/socks5 127.0.0.1 9050/g' /etc/proxychains.conf 2>/dev/null
 
 # 2. Metasploit-Framework (UserLAnd Spezial-Weg via Rapid7)
 echo -e "${BLUE}[2/6] Installiere Metasploit-Framework (Rapid7)...${RESET}"
@@ -72,7 +74,13 @@ fi
 
 echo -e "\033[92m[+] Tor-Tunnel etabliert! Dein echter Standort ist nun verborgen.\033[0m"
 export TOR_ROUTING=1
-proxychains4 -q python3 autonomous_agent.py
+
+# FIX: Prüft, ob proxychains4 oder das ältere proxychains installiert ist
+if command -v proxychains4 &> /dev/null; then
+    proxychains4 -q python3 autonomous_agent.py
+else
+    proxychains -q python3 autonomous_agent.py
+fi
 EOF
 
 chmod +x pentest
