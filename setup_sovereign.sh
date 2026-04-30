@@ -12,11 +12,15 @@ RESET='\033[0m'
 echo -e "${BLUE}[*] Starte PROJECT OMEGA SOVEREIGN Full-Installation mit Ghost-Routing...${RESET}"
 
 # 1. System-Basis, Nikto, Python & TOR GHOST-NETZWERK
-# FIX: 'procps' hinzugefügt (für pgrep) und 'proxychains' als Fallback
 echo -e "${BLUE}[1/6] Installiere System-Tools, Nikto, Tor & Proxychains...${RESET}"
 sudo apt update -y
+
+# FIX: Getrennte Installation! Wenn ein Paket auf UserLAnd fehlt, bricht apt sonst alles ab.
 sudo apt install -y python3 python3-pip python3-requests python3-urllib3 \
-                     git unzip curl wget sqlite3 nikto build-essential tor proxychains4 proxychains procps
+                     git unzip curl wget sqlite3 nikto build-essential tor procps
+
+# Installiere proxychains4, falls nicht vorhanden, als Fallback das alte proxychains
+sudo apt install -y proxychains4 || sudo apt install -y proxychains
 
 # Konfiguriere Proxychains für das Tor-Netzwerk (SOCKS5 auf Port 9050 erzwingen)
 sudo sed -i 's/socks4 \+127.0.0.1 \+9050/socks5 127.0.0.1 9050/g' /etc/proxychains4.conf 2>/dev/null
@@ -66,7 +70,8 @@ cat << 'EOF' > pentest
 #!/bin/bash
 echo -e "\033[94m[*] Initialisiere Ghost-Routing (Tor-Netzwerk)...\033[0m"
 
-if ! pgrep -x "tor" > /dev/null; then
+# FIX: 2>&1 unterdrückt Fehlermeldungen komplett, falls pgrep nicht existiert
+if ! pgrep -x "tor" > /dev/null 2>&1; then
     tor > /dev/null 2>&1 &
     echo -e "\033[90m[*] Verbinde mit Tor-Knoten (bitte ca. 5 Sekunden warten)...\033[0m"
     sleep 5
@@ -75,11 +80,15 @@ fi
 echo -e "\033[92m[+] Tor-Tunnel etabliert! Dein echter Standort ist nun verborgen.\033[0m"
 export TOR_ROUTING=1
 
-# FIX: Prüft, ob proxychains4 oder das ältere proxychains installiert ist
+# FIX: Harter Check, welches Proxychains von apt installiert wurde
 if command -v proxychains4 &> /dev/null; then
     proxychains4 -q python3 autonomous_agent.py
-else
+elif command -v proxychains &> /dev/null; then
     proxychains -q python3 autonomous_agent.py
+else
+    echo -e "\033[91m[!] FEHLER: Proxychains nicht gefunden.\033[0m"
+    echo -e "\033[93mBitte führe './setup_sovereign.sh' noch einmal aus!\033[0m"
+    exit 1
 fi
 EOF
 
